@@ -1,0 +1,49 @@
+﻿@page "/"
+
+<h1>Hello, world!</h1>
+
+<input @bind="@Search" placeholder="Escribe tu consulta" />
+<button @onclick="Filter">
+    Filtrar
+</button>
+
+<ul>
+    @foreach (var R in References)
+    {
+        <li>
+            <Collapse Title="@R.Title">
+                <Content>
+                    @R.Url
+                </Content>
+            </Collapse>
+            <span @onclick="() => FilterById(R.Id)"> 
+                @R.Title
+            </span>
+        </li>
+    }
+</ul>
+
+Welcome to your new app.
+
+
+
+
+
+
+
+@code{
+
+    string Search;
+
+    List<Reference> References = Repository.References.Where(r => r.ParentId == 0).ToList();
+
+    void Filter()
+    {
+        References = Repository.References.Where(r => r.Title.Contains(Search)).ToList();
+    }
+
+    void FilterById(int id)
+    {
+        References = Repository.References.Where(r => r.ParentId == id).ToList();
+    }
+}

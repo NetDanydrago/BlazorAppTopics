@@ -1,0 +1,59 @@
+﻿<button @attributes="Attributes" @onclick="OnCollapse">
+    @Title
+</button>
+<div style="max-height:@Height; display:@Visible;" class="mycontent @ClassName">
+    @Content
+</div>
+
+@code {
+
+        int[] Arreglo = new int[2];
+
+        [Parameter]
+        public bool IsCollapse { get; set; }
+
+        [Parameter(CaptureUnmatchedValues = true)]
+        public Dictionary<string, object> Attributes { get; set; }
+
+        [Parameter]
+        public string Title { get; set; }
+
+        [Parameter]
+        public RenderFragment Content { get; set; }
+
+        string Height;
+
+        string DefaultCssClass = "mycollapsible";
+        string Visible;
+
+
+public string ClassName { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (Attributes == null)
+        {
+            Attributes = new Dictionary<string, object>();
+        }
+        if (!Attributes.ContainsKey("class"))
+        {
+            Attributes.Add("class", DefaultCssClass);
+        }
+    }
+
+    void OnCollapse()
+    {
+
+        Visible = Visible switch
+        {
+            "block" => "",
+            _ => "block"
+        };
+        Height = Height switch
+        {
+
+            "300px" => "",
+            _ => "300px"
+        };
+    }
+}
