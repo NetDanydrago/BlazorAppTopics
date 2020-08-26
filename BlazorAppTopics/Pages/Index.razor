@@ -11,17 +11,68 @@
     @foreach (var R in References)
     {
         <li>
-            <Collapse Title="@R.Title">
-                <Content>
-                    @R.Url
-                </Content>
-            </Collapse>
-            <span @onclick="() => FilterById(R.Id)"> 
-                @R.Title
-            </span>
+            <span class="caret">@R.Title</span>
+            <button @onclick="() => FilterById(R.Id)">Click</button>
+            <ul>
+                @foreach (var T in Test.Where(p => p.ParentId == R.Id))
+                {
+                    <li>
+                        <span>@T.Title</span>
+                        @foreach (var D in Test.Where(d => d.ParentId == T.Id))
+                        {
+                            <ul>
+                                <li>
+                                    <span>@D.Title</span>
+                                    @foreach (var S in Test.Where(d => d.ParentId == D.Id))
+                                    {
+                                        <ul>
+                                            <li>@S.Title</li>
+                                        </ul>
+                                    }
+                                </li>
+                            </ul>
+                        }
+                    </li>
+                }
+            </ul>
         </li>
     }
 </ul>
+
+<div class="row">
+    <div class="col">
+        <ul>
+            @foreach (var R in References)
+            { 
+                 <li>
+                    <span class="caret">@R.Title</span>
+                    <button @onclick="() => FilterById(R.Id)">Click</button>
+                 </li>
+            }
+        </ul>
+     </div>
+    @if (IsShowTitleN2)
+    {
+        <div class="col">
+            <ul>
+                @foreach (var R in Content)
+                {
+                    <li>
+                        @R.Title
+
+                    </li>
+                }
+            </ul>
+        </div>
+     }
+    </div>
+
+
+
+
+
+
+<Table Items="Test"></Table>
 
 Welcome to your new app.
 
@@ -33,9 +84,15 @@ Welcome to your new app.
 
 @code{
 
+    string Color;
+    bool IsShowTitleN2 = false;
     string Search;
 
+    List<Reference> Content = new List<Reference>();
+    List<Reference> Test = Repository.References.ToList();
     List<Reference> References = Repository.References.Where(r => r.ParentId == 0).ToList();
+
+    bool IsTilte = Repository.References.Where(r => r.ParentId == 0).Any();
 
     void Filter()
     {
@@ -44,6 +101,10 @@ Welcome to your new app.
 
     void FilterById(int id)
     {
-        References = Repository.References.Where(r => r.ParentId == id).ToList();
+        Content = Repository.References.Where(r => r.ParentId == id).ToList();
+        if(Content.Count > 0)
+        {
+            IsShowTitleN2 = true;
+        }
     }
 }

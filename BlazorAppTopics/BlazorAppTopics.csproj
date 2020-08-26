@@ -13,6 +13,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\BlazorComponents\BlazorComponents.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Reference Include="BlazorReferences.References">
       <HintPath>BlazorReferences.References.dll</HintPath>
     </Reference>

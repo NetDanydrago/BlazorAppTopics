@@ -1,0 +1,22 @@
+﻿/*
+    This file is to show how CSS and other static resources (such as images) can be
+    used from a library project/package.
+*/
+
+.section {
+    overflow: hidden;
+    height: auto;
+    max-height: 600px;
+    opacity: 1;
+    transition-property: opacity,max-height;
+    transition-duration:  1.5s,2s;
+    transition-delay: 0.2s,0s;
+    transition-timing-function: cubic-bezier(.175,.885,.32,1.275);
+}
+
+    .section.collapsed {
+        max-height: 0;
+        opacity: 0;
+        transition-property: opacity,max-height;
+    }
+

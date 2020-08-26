@@ -1,0 +1,35 @@
+﻿<div class="section @ClassCollapsed">
+    @ChildContent
+</div>
+
+
+
+@code {
+
+    public enum CollapseState
+    {
+        Hidden,
+        Show
+    }
+
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+
+    [Parameter]
+    public CollapseState Collapsed { get; set; }
+
+    string ClassCollapsed { get; set; }
+
+
+    protected override void  OnParametersSet()
+    {
+        ClassCollapsed = Collapsed switch
+        {
+            CollapseState.Show => "",
+            CollapseState.Hidden => "collapsed",
+        };
+
+    }
+
+}
+
