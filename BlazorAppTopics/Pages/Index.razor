@@ -6,75 +6,82 @@
 <button @onclick="Filter">
     Filtrar
 </button>
-
-<ul>
-    @foreach (var R in References)
-    {
-        <li>
-            <span class="caret">@R.Title</span>
-            <button @onclick="() => FilterById(R.Id)">Click</button>
+    <div class="row">
+        <div class="col">
             <ul>
-                @foreach (var T in Test.Where(p => p.ParentId == R.Id))
+                @foreach (var R in Topics)
                 {
                     <li>
-                        <span>@T.Title</span>
-                        @foreach (var D in Test.Where(d => d.ParentId == T.Id))
+                        <label>
+                            @if (R.IsHasChildren)
+                            {
+                                <a @onclick="() => { DoSomeThing(R); }">@R.Title</a>
+                            }
+                            else
+                            {
+                                <span>@R.Title</span>
+                            }
+                            <a href="@R.Url">Link</a>
+                        </label>
+                        @if (R.ListSecondary != null)
                         {
                             <ul>
-                                <li>
-                                    <span>@D.Title</span>
-                                    @foreach (var S in Test.Where(d => d.ParentId == D.Id))
-                                    {
-                                        <ul>
-                                            <li>@S.Title</li>
-                                        </ul>
-                                    }
-                                </li>
+                                @foreach (var S in R.ListSecondary)
+                                {
+                                    <li>
+                                        <label>
+                                            <span>@S.Title</span>
+                                            @if (S.IsHasChildren)
+                                            {
+                                                <button @onclick="() => { DoSomeThing(S);}">Click</button>
+                                            }
+                                            <a href="@S.Url">Link</a>
+                                        </label>
+                                        @if (S.ListSecondary != null)
+                                        {
+                                            <ul>
+                                                @foreach (var T in S.ListSecondary)
+                                                {
+                                                    <li>
+                                                        <label>
+                                                            <span>@T.Title</span>
+                                                            @if (T.IsHasChildren)
+                                                            {
+                                                                <button @onclick="() => { DoSomeThing(T);}">Click</button>
+                                                            }
+                                                            <a href="@S.Url">Link</a>
+                                                        </label>
+                                                        @if (T.ListSecondary != null)
+                                                        {
+                                                            <ul>
+                                                                @foreach (var Q in T.ListSecondary)
+                                                                {
+                                                                    <li>
+                                                                        <label>
+                                                                            <span>@Q.Title</span>
+                                                                            <a href="@Q.Url">Link</a>
+                                                                        </label>
+                                                                    </li>
+                                                                }
+                                                            </ul>
+                                                        }
+                                                    </li>
+                                                }
+                                            </ul>
+                                        }
+                                    </li>
+                                }
                             </ul>
                         }
                     </li>
                 }
             </ul>
-        </li>
-    }
-</ul>
-
-<div class="row">
-    <div class="col">
-        <ul>
-            @foreach (var R in References)
-            { 
-                 <li>
-                    <span class="caret">@R.Title</span>
-                    <button @onclick="() => FilterById(R.Id)">Click</button>
-                 </li>
-            }
-        </ul>
-     </div>
-    @if (IsShowTitleN2)
-    {
-        <div class="col">
-            <ul>
-                @foreach (var R in Content)
-                {
-                    <li>
-                        @R.Title
-
-                    </li>
-                }
-            </ul>
         </div>
-     }
     </div>
 
 
 
 
-
-
-<Table Items="Test"></Table>
-
-Welcome to your new app.
 
 
 
@@ -84,27 +91,67 @@ Welcome to your new app.
 
 @code{
 
-    string Color;
-    bool IsShowTitleN2 = false;
+    List<Topic> BaseTopics;
+    List<Topic> Topics;
+
+
+    protected override void OnInitialized()
+    {
+        BaseTopics = Repository.References.ToList().ConvertAll(p => new Topic()
+        {
+            Id = p.Id,
+            ParentId = p.ParentId,
+            Title = p.Title,
+            Url = p.Url,
+            IsHasChildren = true
+        });
+        Topics = BaseTopics.Where(p => p.ParentId == 0).ToList();
+    }
+
+
+
+
+    class Topic
+    {
+        public int Id { get; set; }
+        public int ParentId { get; set; }
+        public string Title { get; set; }
+        public string Url { get; set; }
+        public bool IsHasChildren { get; set; }
+        public List<Topic> ListSecondary { get; set; }
+        public bool IsOpen { get; set; }
+    }
+
     string Search;
 
-    List<Reference> Content = new List<Reference>();
-    List<Reference> Test = Repository.References.ToList();
-    List<Reference> References = Repository.References.Where(r => r.ParentId == 0).ToList();
 
-    bool IsTilte = Repository.References.Where(r => r.ParentId == 0).Any();
+    void DoSomeThing(Topic p)
+    {
+        if (p.IsOpen)
+        {
+            p.ListSecondary = default;
+            p.IsOpen = false;
+        }
+        else
+        {
+            p.ListSecondary = BaseTopics.Where(c => c.ParentId == p.Id).ToList();
+            if(p.ListSecondary.Count > 0)
+            {
+                p.IsOpen = true;
+            }
+            else
+            {
+                p.IsHasChildren = false;
+            }
+
+        }
+    }
+
+
+
 
     void Filter()
     {
-        References = Repository.References.Where(r => r.Title.Contains(Search)).ToList();
-    }
-
-    void FilterById(int id)
-    {
-        Content = Repository.References.Where(r => r.ParentId == id).ToList();
-        if(Content.Count > 0)
-        {
-            IsShowTitleN2 = true;
-        }
+        Topics = BaseTopics.Where(r => r.Title.Contains(Search)).ToList();
     }
 }
