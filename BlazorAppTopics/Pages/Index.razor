@@ -1,11 +1,26 @@
 ﻿@page "/"
 
-<h1>Hello, world!</h1>
+    <div class="autocomplete" style="width:300px;">
+        <input   @bind="@Search" id="myInput" @bind:event="oninput" type="text" name="myCountry" placeholder="Country">
+    </div>
+    <div id="myInputautocomplete-list" class="autocomplete-items">
+       @if (Autocomplete != null)
+       {
+        @foreach (var A in Autocomplete)
+        {
+            <div @onclick="() => Search = A.Title" style="cursor:pointer;">
+                @A.Title
+            </div>
+        }
+       }
+    </div>
+    <button @onclick="Filter">
+        Filtrar
+    </button>
 
-<input @bind="@Search" placeholder="Escribe tu consulta" />
-<button @onclick="Filter">
-    Filtrar
-</button>
+
+@*<input @bind="@Search" placeholder="Escribe tu consulta" />*@
+
     <div class="row">
         <div class="col">
             <ul>
@@ -15,7 +30,7 @@
                         <label>
                             @if (R.IsHasChildren)
                             {
-                                <a @onclick="() => { DoSomeThing(R); }">@R.Title</a>
+                                <a @onclick="() => { DoSomeThing(R); }" style="cursor:pointer;">@R.Title</a>
                             }
                             else
                             {
@@ -30,10 +45,13 @@
                                 {
                                     <li>
                                         <label>
-                                            <span>@S.Title</span>
                                             @if (S.IsHasChildren)
                                             {
-                                                <button @onclick="() => { DoSomeThing(S);}">Click</button>
+                                                <a @onclick="() => { DoSomeThing(S); }" style="cursor:pointer;">@S.Title</a>
+                                            }
+                                            else
+                                            {
+                                                <span>@S.Title</span>
                                             }
                                             <a href="@S.Url">Link</a>
                                         </label>
@@ -44,12 +62,15 @@
                                                 {
                                                     <li>
                                                         <label>
-                                                            <span>@T.Title</span>
                                                             @if (T.IsHasChildren)
                                                             {
-                                                                <button @onclick="() => { DoSomeThing(T);}">Click</button>
+                                                                <a @onclick="() => { DoSomeThing(T); }" style="cursor:pointer;">@T.Title</a>
                                                             }
-                                                            <a href="@S.Url">Link</a>
+                                                            else
+                                                            {
+                                                                <span>@T.Title</span>
+                                                            }
+                                                            <a href="@T.Url">Link</a>
                                                         </label>
                                                         @if (T.ListSecondary != null)
                                                         {
@@ -93,6 +114,8 @@
 
     List<Topic> BaseTopics;
     List<Topic> Topics;
+    List<Topic> Autocomplete;
+    event Action Invoque;
 
 
     protected override void OnInitialized()
@@ -106,6 +129,7 @@
             IsHasChildren = true
         });
         Topics = BaseTopics.Where(p => p.ParentId == 0).ToList();
+        Invoque += FilterChange;
     }
 
 
@@ -122,7 +146,8 @@
         public bool IsOpen { get; set; }
     }
 
-    string Search;
+    private string BFSearch;
+    public string Search { get { return BFSearch; } set { BFSearch = value; Invoque?.Invoke();} }
 
 
     void DoSomeThing(Topic p)
@@ -148,10 +173,28 @@
     }
 
 
-
+    void FilterChange()
+    {
+        Autocomplete = BaseTopics;
+        Autocomplete = Autocomplete.Where(d => d.Title.ToLower().Contains(BFSearch.ToLower())).Take(10).ToList();
+    }
 
     void Filter()
     {
-        Topics = BaseTopics.Where(r => r.Title.Contains(Search)).ToList();
+        List<Topic> TopicParent = new List<Topic>();
+        Topics = BaseTopics.Where(r => r.Title.Contains(BFSearch)).ToList();
+        foreach(var T in Topics)
+        {
+            var Topic = T;
+            if (T.ParentId != 0)
+            {
+                Topic = BaseTopics.Where(d => d.Id == T.ParentId).FirstOrDefault();
+            }
+            if(Topic != null)
+            {
+                TopicParent.Add(Topic);
+            }
+        }
+        Topics = TopicParent.Distinct().ToList();
     }
 }
