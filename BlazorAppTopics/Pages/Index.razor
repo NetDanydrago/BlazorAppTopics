@@ -1,87 +1,106 @@
 ﻿@page "/"
 
-    <div class="autocomplete" style="width:300px;">
-        <input   @bind="@Search" id="myInput" @bind:event="oninput" type="text" name="myCountry" placeholder="Country">
-    </div>
-    <div id="myInputautocomplete-list" class="autocomplete-items">
-       @if (Autocomplete != null)
-       {
-        @foreach (var A in Autocomplete)
-        {
-            <div @onclick="() => Search = A.Title" style="cursor:pointer;">
-                @A.Title
-            </div>
-        }
-       }
-    </div>
-    <button @onclick="Filter">
-        Filtrar
-    </button>
+<div class="autocomplete">
+    <input @bind="@Search" id="myInput" @bind:event="oninput" type="text" name="myCountry" placeholder="Busqueda">
+    @*<div class="autocomplete-items">
+            @if (Autocomplete != null)
+            {
+                @foreach (var Title in Autocomplete)
+                {
+                    <div @onclick="() => { Search = Title.Title;
+                                       Autocomplete = default; }">
+                        @Title
+                    </div>
+                }
+            }
+        </div>*@
+</div>
 
 
-@*<input @bind="@Search" placeholder="Escribe tu consulta" />*@
-
+@if (TopicsComplete != null)
+{
     <div class="row">
         <div class="col">
             <ul>
-                @foreach (var R in Topics)
+                @foreach (var LevelTopicOne in TopicsComplete)
                 {
                     <li>
                         <label>
-                            @if (R.IsHasChildren)
+                            @if (LevelTopicOne.IsHasChildren)
                             {
-                                <a @onclick="() => { DoSomeThing(R); }" style="cursor:pointer;">@R.Title</a>
+                                <a class="TopicTitle" @onclick="() => { GetChildrenTopic(LevelTopicOne); }" style="cursor:pointer;">@LevelTopicOne.Title</a>
                             }
                             else
                             {
-                                <span>@R.Title</span>
+                                <span>@LevelTopicOne.Title</span>
                             }
-                            <a href="@R.Url">Link</a>
+                            <a href="@LevelTopicOne.Url">Link</a>
                         </label>
-                        @if (R.ListSecondary != null)
+                        @if (LevelTopicOne.ChildrenList != null)
                         {
                             <ul>
-                                @foreach (var S in R.ListSecondary)
+                                @foreach (var LevelTopicTwo in LevelTopicOne.ChildrenList)
                                 {
                                     <li>
                                         <label>
-                                            @if (S.IsHasChildren)
+                                            @if (LevelTopicTwo.IsHasChildren)
                                             {
-                                                <a @onclick="() => { DoSomeThing(S); }" style="cursor:pointer;">@S.Title</a>
+                                                <a class="TopicTitle" @onclick="() => { GetChildrenTopic(LevelTopicTwo); }" style="cursor:pointer;">@LevelTopicTwo.Title</a>
                                             }
                                             else
                                             {
-                                                <span>@S.Title</span>
+                                                <span>@LevelTopicTwo.Title</span>
                                             }
-                                            <a href="@S.Url">Link</a>
+                                            <a href="@LevelTopicTwo.Url">Link</a>
                                         </label>
-                                        @if (S.ListSecondary != null)
+                                        @if (LevelTopicTwo.ChildrenList != null)
                                         {
                                             <ul>
-                                                @foreach (var T in S.ListSecondary)
+                                                @foreach (var LevelTopicTree in LevelTopicTwo.ChildrenList)
                                                 {
                                                     <li>
                                                         <label>
-                                                            @if (T.IsHasChildren)
+                                                            @if (LevelTopicTree.IsHasChildren)
                                                             {
-                                                                <a @onclick="() => { DoSomeThing(T); }" style="cursor:pointer;">@T.Title</a>
+                                                                <a class="TopicTitle" @onclick="() => { GetChildrenTopic(LevelTopicTree); }" style="cursor:pointer;">@LevelTopicTree.Title</a>
                                                             }
                                                             else
                                                             {
-                                                                <span>@T.Title</span>
+                                                                <span>@LevelTopicTree.Title</span>
                                                             }
-                                                            <a href="@T.Url">Link</a>
+                                                            <a href="@LevelTopicTree.Url">Link</a>
                                                         </label>
-                                                        @if (T.ListSecondary != null)
+                                                        @if (LevelTopicTree.ChildrenList != null)
                                                         {
                                                             <ul>
-                                                                @foreach (var Q in T.ListSecondary)
+                                                                @foreach (var LevelTopicFour in LevelTopicTree.ChildrenList)
                                                                 {
                                                                     <li>
                                                                         <label>
-                                                                            <span>@Q.Title</span>
-                                                                            <a href="@Q.Url">Link</a>
+                                                                            @if (LevelTopicFour.IsHasChildren)
+                                                                            {
+                                                                                <a class="TopicTitle" @onclick="() => { GetChildrenTopic(LevelTopicFour); }" style="cursor:pointer;">@LevelTopicFour.Title</a>
+                                                                            }
+                                                                            else
+                                                                            {
+                                                                                <span>@LevelTopicFour.Title</span>
+                                                                            }
+                                                                            <a href="@LevelTopicFour.Url">Link</a>
                                                                         </label>
+                                                                        @if (LevelTopicFour.ChildrenList != null)
+                                                                        {
+                                                                            <ul>
+                                                                                @foreach (var LevelTopicFive in LevelTopicFour.ChildrenList)
+                                                                                {
+                                                                                    <li>
+                                                                                        <label>
+                                                                                            <span>@LevelTopicFive.Title </span>
+                                                                                            <a href="@LevelTopicFive.Url">Link</a>
+                                                                                        </label>
+                                                                                    </li>
+                                                                                }
+                                                                            </ul>
+                                                                        }
                                                                     </li>
                                                                 }
                                                             </ul>
@@ -99,7 +118,7 @@
             </ul>
         </div>
     </div>
-
+}
 
 
 
@@ -112,11 +131,13 @@
 
 @code{
 
-    List<Topic> BaseTopics;
-    List<Topic> Topics;
-    List<Topic> Autocomplete;
-    event Action Invoque;
-
+        List<Topic> BaseTopics;
+        List<Topic> Topics;
+        List<Topic> Autocomplete;
+        List<Topic> TopicsComplete;
+    event Action OnInputSearch;
+    private string BFSearch;
+    public string Search { get { return BFSearch; } set { BFSearch = value; OnInputSearch?.Invoke(); } }
 
     protected override void OnInitialized()
     {
@@ -129,38 +150,65 @@
             IsHasChildren = true
         });
         Topics = BaseTopics.Where(p => p.ParentId == 0).ToList();
-        Invoque += FilterChange;
+        OnInputSearch += Filter;
     }
 
+    //void FilterSearchInputRecursive()
+    //{
+    //    if(!string.IsNullOrEmpty(BFSearch))
+    //    {
+    //        Autocomplete = BaseTopics.Where(d => d.Title.ToLower().Contains(BFSearch.ToLower())).Select(d => d.Title)
+    //.Take(10).Distinct().ToList();
+    //    }
+    //    else
+    //    {
+    //        Autocomplete = default;
+    //    }
+    //}
 
-
-
-    class Topic
+    void FilterSearchInputRecursive(int id)
     {
-        public int Id { get; set; }
-        public int ParentId { get; set; }
-        public string Title { get; set; }
-        public string Url { get; set; }
-        public bool IsHasChildren { get; set; }
-        public List<Topic> ListSecondary { get; set; }
-        public bool IsOpen { get; set; }
+        if (id != 0)
+        {
+            var topic = Autocomplete.Where(d => d.Id == id).FirstOrDefault();
+            TopicsComplete.Add(topic);
+            FilterSearchInputRecursive(topic.ParentId);
+        }
     }
 
-    private string BFSearch;
-    public string Search { get { return BFSearch; } set { BFSearch = value; Invoque?.Invoke();} }
+    void Filter()
+    {
+        TopicsComplete = new List<Topic>();
+        Autocomplete = new List<Topic>();
+        if (!string.IsNullOrEmpty(BFSearch))
+        {
+            Autocomplete = BaseTopics.Where(r => r.Title.ToLower().Contains(BFSearch.ToLower())).ToList();
+            foreach (var D in Autocomplete)
+            {
+                    TopicsComplete.Add(D);
+                FilterSearchInputRecursive(D.ParentId);
+            }
+
+        }
+        else
+        {
+            Autocomplete = BaseTopics.Where(p => p.ParentId == 0).ToList();
+        }
+    }
 
 
-    void DoSomeThing(Topic p)
+
+    void GetChildrenTopic(Topic p)
     {
         if (p.IsOpen)
         {
-            p.ListSecondary = default;
+            p.ChildrenList = default;
             p.IsOpen = false;
         }
         else
         {
-            p.ListSecondary = BaseTopics.Where(c => c.ParentId == p.Id).ToList();
-            if(p.ListSecondary.Count > 0)
+            p.ChildrenList = BaseTopics.Where(c => c.ParentId == p.Id).ToList();
+            if (p.ChildrenList.Count > 0)
             {
                 p.IsOpen = true;
             }
@@ -173,28 +221,6 @@
     }
 
 
-    void FilterChange()
-    {
-        Autocomplete = BaseTopics;
-        Autocomplete = Autocomplete.Where(d => d.Title.ToLower().Contains(BFSearch.ToLower())).Take(10).ToList();
-    }
 
-    void Filter()
-    {
-        List<Topic> TopicParent = new List<Topic>();
-        Topics = BaseTopics.Where(r => r.Title.Contains(BFSearch)).ToList();
-        foreach(var T in Topics)
-        {
-            var Topic = T;
-            if (T.ParentId != 0)
-            {
-                Topic = BaseTopics.Where(d => d.Id == T.ParentId).FirstOrDefault();
-            }
-            if(Topic != null)
-            {
-                TopicParent.Add(Topic);
-            }
-        }
-        Topics = TopicParent.Distinct().ToList();
-    }
+
 }
