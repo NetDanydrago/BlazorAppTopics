@@ -2,27 +2,15 @@
 
 <div class="autocomplete">
     <input @bind="@Search" id="myInput" @bind:event="oninput" type="text" name="myCountry" placeholder="Busqueda">
-    @*<div class="autocomplete-items">
-            @if (Autocomplete != null)
-            {
-                @foreach (var Title in Autocomplete)
-                {
-                    <div @onclick="() => { Search = Title.Title;
-                                       Autocomplete = default; }">
-                        @Title
-                    </div>
-                }
-            }
-        </div>*@
 </div>
 
 
-@if (TopicsComplete != null)
+@if (Topics != null)
 {
     <div class="row">
         <div class="col">
             <ul>
-                @foreach (var LevelTopicOne in TopicsComplete)
+                @foreach (var LevelTopicOne in Topics)
                 {
                     <li>
                         <label>
@@ -131,17 +119,24 @@
 
 @code{
 
-        List<Topic> BaseTopics;
-        List<Topic> Topics;
-        List<Topic> Autocomplete;
-        List<Topic> TopicsComplete;
+    List<Topic> BaseTopics;
+    List<Topic> Topics;
+    List<Topic> TopicsComplete;
     event Action OnInputSearch;
     private string BFSearch;
     public string Search { get { return BFSearch; } set { BFSearch = value; OnInputSearch?.Invoke(); } }
 
     protected override void OnInitialized()
     {
-        BaseTopics = Repository.References.ToList().ConvertAll(p => new Topic()
+        BaseTopics = GetTopics();
+        Topics = BaseTopics.Where(d => d.ParentId == 0).ToList();
+        TopicsComplete = GetTopics();
+        OnInputSearch += Filter;
+    }
+
+    List<Topic> GetTopics()
+    {
+        return Repository.References.ToList().ConvertAll(p => new Topic()
         {
             Id = p.Id,
             ParentId = p.ParentId,
@@ -149,29 +144,22 @@
             Url = p.Url,
             IsHasChildren = true
         });
-        Topics = BaseTopics.Where(p => p.ParentId == 0).ToList();
-        OnInputSearch += Filter;
     }
-
-    //void FilterSearchInputRecursive()
-    //{
-    //    if(!string.IsNullOrEmpty(BFSearch))
-    //    {
-    //        Autocomplete = BaseTopics.Where(d => d.Title.ToLower().Contains(BFSearch.ToLower())).Select(d => d.Title)
-    //.Take(10).Distinct().ToList();
-    //    }
-    //    else
-    //    {
-    //        Autocomplete = default;
-    //    }
-    //}
 
     void FilterSearchInputRecursive(int id)
     {
         if (id != 0)
         {
-            var topic = Autocomplete.Where(d => d.Id == id).FirstOrDefault();
-            TopicsComplete.Add(topic);
+            var topic = Topics.Where(d => d.Id == id).FirstOrDefault();
+            if(topic == null)
+            {
+                topic = TopicsComplete.Where(d => d.Id == id).FirstOrDefault();
+                if (topic == null)
+                {
+                    topic = BaseTopics.Where(d => d.Id == id).FirstOrDefault();
+                    TopicsComplete.Add(topic);
+                }
+            }
             FilterSearchInputRecursive(topic.ParentId);
         }
     }
@@ -179,24 +167,23 @@
     void Filter()
     {
         TopicsComplete = new List<Topic>();
-        Autocomplete = new List<Topic>();
+        Topics = new List<Topic>();
         if (!string.IsNullOrEmpty(BFSearch))
         {
-            Autocomplete = BaseTopics.Where(r => r.Title.ToLower().Contains(BFSearch.ToLower())).ToList();
-            foreach (var D in Autocomplete)
+            Topics = BaseTopics.Where(r => r.Title.ToLower().Contains(BFSearch.ToLower())).ToList();
+            foreach (var D in Topics)
             {
-                    TopicsComplete.Add(D);
                 FilterSearchInputRecursive(D.ParentId);
             }
-
+            TopicsComplete.AddRange(Topics);
+            Topics = TopicsComplete.Where(d => d.ParentId == 0).ToList();
         }
         else
         {
-            Autocomplete = BaseTopics.Where(p => p.ParentId == 0).ToList();
+            Topics = BaseTopics.Where(p => p.ParentId == 0).ToList();
+            TopicsComplete = BaseTopics;
         }
     }
-
-
 
     void GetChildrenTopic(Topic p)
     {
@@ -207,7 +194,7 @@
         }
         else
         {
-            p.ChildrenList = BaseTopics.Where(c => c.ParentId == p.Id).ToList();
+            p.ChildrenList = TopicsComplete.Where(c => c.ParentId == p.Id).ToList();
             if (p.ChildrenList.Count > 0)
             {
                 p.IsOpen = true;
@@ -219,8 +206,5 @@
 
         }
     }
-
-
-
 
 }
