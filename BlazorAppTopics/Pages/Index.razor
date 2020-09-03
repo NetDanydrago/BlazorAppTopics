@@ -1,7 +1,7 @@
 ﻿@page "/"
 
 <div class="autocomplete">
-    <input @bind="@Search" id="myInput" @bind:event="oninput" type="text" name="myCountry" placeholder="Busqueda">
+    <input @bind="@Search" id="myInput" @bind:event="oninput" type="text" @onfocus="() => { BaseTopics = GetTopics(); }" name="myCountry" placeholder="Busqueda">
 </div>
 
 
@@ -16,13 +16,17 @@
                         <label>
                             @if (LevelTopicOne.IsHasChildren)
                             {
-                                <a class="TopicTitle" @onclick="() => { GetChildrenTopic(LevelTopicOne); }" style="cursor:pointer;">@LevelTopicOne.Title</a>
+                                <a @onclick="() => { GetChildrenTopic(LevelTopicOne); }" style="cursor:pointer;">
+                                    <i class="fa fa-angle-right @(LevelTopicOne.IsOpen? "itemOpen":"itemClose")" aria-hidden="true"/>    
+                                     @LevelTopicOne.Title</a>
                             }
                             else
                             {
                                 <span>@LevelTopicOne.Title</span>
                             }
-                            <a href="@LevelTopicOne.Url">Link</a>
+                        <a href="@LevelTopicOne.Url" target="_blank">
+                            <i class="fa fa-external-link" aria-hidden="true"/>
+                        </a>
                         </label>
                         @if (LevelTopicOne.ChildrenList != null)
                         {
@@ -33,13 +37,18 @@
                                         <label>
                                             @if (LevelTopicTwo.IsHasChildren)
                                             {
-                                                <a class="TopicTitle" @onclick="() => { GetChildrenTopic(LevelTopicTwo); }" style="cursor:pointer;">@LevelTopicTwo.Title</a>
+                                                <a @onclick="() => { GetChildrenTopic(LevelTopicTwo); }" style="cursor:pointer;">
+                                                    <i class="fa fa-angle-right @(LevelTopicTwo.IsOpen? "itemOpen":"itemClose")" aria-hidden="true" />
+                                                    @LevelTopicTwo.Title
+                                                </a>
                                             }
                                             else
                                             {
                                                 <span>@LevelTopicTwo.Title</span>
                                             }
-                                            <a href="@LevelTopicTwo.Url">Link</a>
+                                        <a href="@LevelTopicTwo.Url" target="_blank">
+                                            <i class="fa fa-external-link" aria-hidden="true" />
+                                        </a>
                                         </label>
                                         @if (LevelTopicTwo.ChildrenList != null)
                                         {
@@ -50,13 +59,18 @@
                                                         <label>
                                                             @if (LevelTopicTree.IsHasChildren)
                                                             {
-                                                                <a class="TopicTitle" @onclick="() => { GetChildrenTopic(LevelTopicTree); }" style="cursor:pointer;">@LevelTopicTree.Title</a>
+                                                                <a @onclick="() => { GetChildrenTopic(LevelTopicTree); }" style="cursor:pointer;">
+                                                                    <i class="fa fa-angle-right @(LevelTopicTree.IsOpen? "itemOpen":"itemClose")" aria-hidden="true" /> 
+                                                                    @LevelTopicTree.Title
+                                                                </a>
                                                             }
                                                             else
                                                             {
                                                                 <span>@LevelTopicTree.Title</span>
                                                             }
-                                                            <a href="@LevelTopicTree.Url">Link</a>
+                                                        <a href="@LevelTopicTree.Url" target="_blank">
+                                                            <i class="fa fa-external-link" aria-hidden="true" />
+                                                        </a>
                                                         </label>
                                                         @if (LevelTopicTree.ChildrenList != null)
                                                         {
@@ -67,13 +81,18 @@
                                                                         <label>
                                                                             @if (LevelTopicFour.IsHasChildren)
                                                                             {
-                                                                                <a class="TopicTitle" @onclick="() => { GetChildrenTopic(LevelTopicFour); }" style="cursor:pointer;">@LevelTopicFour.Title</a>
+                                                                                <a @onclick="() => { GetChildrenTopic(LevelTopicFour); }" style="cursor:pointer;">
+                                                                                    <i class="fa fa-angle-right @(LevelTopicFour.IsOpen? "itemOpen":"itemClose")" aria-hidden="true" />
+                                                                                    @LevelTopicFour.Title
+                                                                                </a>
                                                                             }
                                                                             else
                                                                             {
                                                                                 <span>@LevelTopicFour.Title</span>
                                                                             }
-                                                                            <a href="@LevelTopicFour.Url">Link</a>
+                                                                        <a href="@LevelTopicFour.Url" target="_blank">
+                                                                            <i class="fa fa-external-link" aria-hidden="true" />
+                                                                        </a>
                                                                         </label>
                                                                         @if (LevelTopicFour.ChildrenList != null)
                                                                         {
@@ -83,7 +102,9 @@
                                                                                     <li>
                                                                                         <label>
                                                                                             <span>@LevelTopicFive.Title </span>
-                                                                                            <a href="@LevelTopicFive.Url">Link</a>
+                                                                                            <a href="@LevelTopicFive.Url" target="_blank">
+                                                                                                <i class="fa fa-external-link" aria-hidden="true" />
+                                                                                            </a>
                                                                                         </label>
                                                                                     </li>
                                                                                 }
@@ -130,7 +151,10 @@
     {
         BaseTopics = GetTopics();
         Topics = BaseTopics.Where(d => d.ParentId == 0).ToList();
-        TopicsComplete = GetTopics();
+        Topics.ForEach(d => {
+            d.IsHasChildren = BaseTopics.Any(i => i.ParentId == d.Id);
+        });
+        TopicsComplete = BaseTopics;
         OnInputSearch += Filter;
     }
 
@@ -142,11 +166,10 @@
             ParentId = p.ParentId,
             Title = p.Title,
             Url = p.Url,
-            IsHasChildren = true
         });
     }
 
-    void FilterSearchInputRecursive(int id)
+    void GetParentTopic(int id)
     {
         if (id != 0)
         {
@@ -160,7 +183,7 @@
                     TopicsComplete.Add(topic);
                 }
             }
-            FilterSearchInputRecursive(topic.ParentId);
+            GetParentTopic(topic.ParentId);
         }
     }
 
@@ -173,10 +196,14 @@
             Topics = BaseTopics.Where(r => r.Title.ToLower().Contains(BFSearch.ToLower())).ToList();
             foreach (var D in Topics)
             {
-                FilterSearchInputRecursive(D.ParentId);
+                GetParentTopic(D.ParentId);
             }
             TopicsComplete.AddRange(Topics);
             Topics = TopicsComplete.Where(d => d.ParentId == 0).ToList();
+            Topics.ForEach(d =>
+            {
+                d.IsHasChildren = TopicsComplete.Any(i => i.ParentId == d.Id);
+            });
         }
         else
         {
@@ -184,6 +211,7 @@
             TopicsComplete = BaseTopics;
         }
     }
+
 
     void GetChildrenTopic(Topic p)
     {
@@ -195,15 +223,14 @@
         else
         {
             p.ChildrenList = TopicsComplete.Where(c => c.ParentId == p.Id).ToList();
+            p.ChildrenList.ForEach(d =>
+            {
+                d.IsHasChildren = TopicsComplete.Any(i => i.ParentId == d.Id);
+            });
             if (p.ChildrenList.Count > 0)
             {
                 p.IsOpen = true;
             }
-            else
-            {
-                p.IsHasChildren = false;
-            }
-
         }
     }
 
